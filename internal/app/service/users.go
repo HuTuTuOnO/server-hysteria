@@ -106,6 +106,7 @@ func (s *UsersService) ReportTrafficsTask() error {
 				Download: trafficItem.Down.Value(),
 				Count:    trafficItem.Count.Value(),
 			})
+			trafficItem.reset()
 		}
 		return true
 	})
@@ -226,6 +227,12 @@ type TrafficItem struct {
 	Up    *counter.Counter
 	Down  *counter.Counter
 	Count *counter.Counter
+}
+
+func (t *TrafficItem) reset() {
+	t.Count.Reset()
+	t.Down.Reset()
+	t.Count.Reset()
 }
 
 func newTrafficItem() *TrafficItem {
