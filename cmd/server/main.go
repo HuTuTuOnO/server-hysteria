@@ -17,7 +17,7 @@ import (
 
 const (
 	Name          = "hysteria-node"
-	Version       = "0.1.0"
+	Version       = "0.1.1"
 	CopyRight     = "XFLASH-PANDA@2021"
 	LogLevelDebug = "debug"
 	LogLevelError = "error"
@@ -157,12 +157,14 @@ func main() {
 			}
 
 			usersService := service.NewUsersService(&serviceConfig, apiClient)
-			app.Run(&serverConfig, usersService)
-			runtime.GC()
-			{
-				osSignals := make(chan os.Signal, 1)
-				signal.Notify(osSignals, os.Interrupt, os.Kill, syscall.SIGTERM)
+			go app.Run(&serverConfig, usersService)
+			osSignals := make(chan os.Signal, 1)
+			signal.Notify(osSignals, os.Interrupt, os.Kill, syscall.SIGTERM)
+			for {
+				runtime.GC()
 				<-osSignals
+				log.Infoln("server will close..")
+				break
 			}
 			return nil
 		},
