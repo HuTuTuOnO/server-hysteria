@@ -26,7 +26,7 @@ type NodeInfo struct {
 	Protocol            string `json:"protocol"`
 	Obfs                string `json:"obfs"`
 	UpMbps              int    `json:"up_mbps"`
-	DonMbps             int    `json:"down_mbps"`
+	DownMbps            int    `json:"down_mbps"`
 	DisableMTUDiscovery int    `json:"disable_mtu_discovery"`
 }
 

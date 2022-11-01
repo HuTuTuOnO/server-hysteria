@@ -17,7 +17,7 @@ import (
 
 const (
 	Name          = "hysteria-node"
-	Version       = "0.1.1"
+	Version       = "0.1.2"
 	CopyRight     = "XFLASH-PANDA@2021"
 	LogLevelDebug = "debug"
 	LogLevelError = "error"
@@ -148,8 +148,9 @@ func main() {
 			serverConfig.DisableMTUDiscovery = nodeInfo.DisableMTUDiscovery != 0
 			serverConfig.Protocol = nodeInfo.Protocol
 			serverConfig.Obfs = nodeInfo.Obfs
-			serverConfig.UpMbps = nodeInfo.UpMbps
-			serverConfig.DownMbps = nodeInfo.DonMbps
+			//与客户端取反
+			serverConfig.UpMbps = nodeInfo.DownMbps
+			serverConfig.DownMbps = nodeInfo.UpMbps
 			serverConfig.Listen = fmt.Sprintf(":%d", nodeInfo.ServerPort)
 
 			if err := serverConfig.Check(); err != nil {
