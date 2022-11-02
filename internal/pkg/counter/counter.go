@@ -21,5 +21,5 @@ func (c *Counter) Reset() {
 }
 
 func (c *Counter) Value() int64 {
-	return c.num
+	return atomic.LoadInt64(&c.num)
 }
