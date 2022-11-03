@@ -196,6 +196,9 @@ func (um *UserManager) deleteUsers(users []api.UserInfo) {
 
 func (um *UserManager) auth(uuid string) (int, bool) {
 	userId, ok := um.store.Load(uuid)
+	if !ok {
+		return -1, false
+	}
 	return userId.(int), ok
 }
 
