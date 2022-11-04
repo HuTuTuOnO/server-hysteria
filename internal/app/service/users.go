@@ -106,7 +106,7 @@ func (s *UsersService) ReportTrafficsTask() error {
 				Download: trafficItem.Down.Value(),
 				Count:    trafficItem.Count.Value(),
 			})
-			trafficItem.reset()
+			s.trafficManager.delete(userId)
 		}
 		return true
 	})
@@ -222,6 +222,10 @@ func (tm *TrafficManager) forRange(f func(key, value any) bool) {
 	tm.store.Range(f)
 }
 
+func (tm *TrafficManager) delete(userId int) {
+	tm.store.Delete(userId)
+}
+
 func newTrafficManager() *TrafficManager {
 	return &TrafficManager{store: sync.Map{}}
 }
@@ -232,7 +236,7 @@ type TrafficItem struct {
 	Count *counter.Counter
 }
 
-func (t *TrafficItem) reset() {
+func (t *TrafficItem) delete() {
 	t.Count.Reset()
 	t.Down.Reset()
 	t.Count.Reset()
