@@ -10,7 +10,7 @@ import (
 	"github.com/xflash-panda/server-hysteria/internal/pkg/transport/pktconns/obfs"
 )
 
-const udpBufferSize = 65535
+const udpBufferSize = 4086
 
 type ObfsUDPPacketConn struct {
 	orig *net.UDPConn

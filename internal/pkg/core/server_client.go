@@ -15,13 +15,12 @@ import (
 	"github.com/xflash-panda/server-hysteria/internal/pkg/utils"
 )
 
-const udpBufferSize = 65535
+const udpBufferSize = 4096
 
 type serverClient struct {
 	CC               quic.Connection
 	Transport        *transport.ServerTransport
 	UserId           int
-	ClientAddr       net.Addr
 	DisableUDP       bool
 	CTCPRequestFunc  TCPRequestFunc
 	CTCPErrorFunc    TCPErrorFunc
@@ -43,7 +42,6 @@ func newServerClient(cc quic.Connection, tr *transport.ServerTransport, userId i
 		CC:              cc,
 		Transport:       tr,
 		UserId:          userId,
-		ClientAddr:      cc.RemoteAddr(),
 		DisableUDP:      disableUDP,
 		TrafficItem:     trafficItem,
 		CTCPRequestFunc: CTCPRequestFunc,
@@ -53,6 +51,12 @@ func newServerClient(cc quic.Connection, tr *transport.ServerTransport, userId i
 		udpSessionMap:   make(map[uint32]transport.STPacketConn),
 	}
 	return sc
+}
+
+func (c *serverClient) ClientAddr() net.Addr {
+	// quic.Connection's remote address may change since we have connection migration now,
+	// so logs need to dynamically get the remote address every time.
+	return c.CC.RemoteAddr()
 }
 
 func (c *serverClient) Run() error {
@@ -160,10 +164,10 @@ func (c *serverClient) handleTCP(stream quic.Stream, host string, port uint16) {
 			OK:      false,
 			Message: "host resolution failure",
 		})
-		c.CTCPErrorFunc(c.ClientAddr, c.UserId, addrStr, err)
+		c.CTCPErrorFunc(c.ClientAddr(), c.UserId, addrStr, err)
 		return
 	}
-	c.CTCPRequestFunc(c.ClientAddr, c.UserId, addrStr)
+	c.CTCPRequestFunc(c.ClientAddr(), c.UserId, addrStr)
 
 	var conn net.Conn // Connection to be piped
 
@@ -180,7 +184,7 @@ func (c *serverClient) handleTCP(stream quic.Stream, host string, port uint16) {
 			OK:      false,
 			Message: err.Error(),
 		})
-		c.CTCPErrorFunc(c.ClientAddr, c.UserId, addrStr, err)
+		c.CTCPErrorFunc(c.ClientAddr(), c.UserId, addrStr, err)
 		return
 	}
 
@@ -203,7 +207,7 @@ func (c *serverClient) handleTCP(stream quic.Stream, host string, port uint16) {
 	} else {
 		err = utils.Pipe2Way(stream, conn, nil)
 	}
-	c.CTCPErrorFunc(c.ClientAddr, c.UserId, addrStr, err)
+	c.CTCPErrorFunc(c.ClientAddr(), c.UserId, addrStr, err)
 }
 
 func (c *serverClient) handleUDP(stream quic.Stream) {
@@ -214,7 +218,7 @@ func (c *serverClient) handleUDP(stream quic.Stream) {
 			OK:      false,
 			Message: "UDP initialization failed",
 		})
-		c.CUDPErrorFunc(c.ClientAddr, c.UserId, 0, err)
+		c.CUDPErrorFunc(c.ClientAddr(), c.UserId, 0, err)
 		return
 	}
 	defer conn.Close()
@@ -233,7 +237,7 @@ func (c *serverClient) handleUDP(stream quic.Stream) {
 	if err != nil {
 		return
 	}
-	c.CUDPRequestFunc(c.ClientAddr, c.UserId, id)
+	c.CUDPRequestFunc(c.ClientAddr(), c.UserId, id)
 
 	// Receive UDP packets, send them to the client
 	go func() {
@@ -283,7 +287,7 @@ func (c *serverClient) handleUDP(stream quic.Stream) {
 			break
 		}
 	}
-	c.CUDPErrorFunc(c.ClientAddr, c.UserId, id, err)
+	c.CUDPErrorFunc(c.ClientAddr(), c.UserId, id, err)
 
 	// Remove the session
 	c.udpSessionMutex.Lock()

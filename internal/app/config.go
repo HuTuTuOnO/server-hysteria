@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
-	"time"
 )
 
 const (
@@ -18,7 +17,7 @@ const (
 
 	DefaultALPN = "h3"
 
-	ServerMaxIdleTimeout = 60 * time.Second
+	ServerMaxIdleTimeoutSec = 60
 )
 
 var rateStringRegexp = regexp.MustCompile(`^(\d+)\s*([KMGT]?)([Bb])ps$`)
@@ -49,7 +48,7 @@ func (c *ServerConfig) Speed() (uint64, uint64, error) {
 
 func (c *ServerConfig) Check() error {
 	if len(c.Listen) == 0 {
-		return errors.New("no listen address")
+		return errors.New("missing listen address")
 	}
 	if up, down, err := c.Speed(); err != nil || (up != 0 && up < minSpeedBPS) || (down != 0 && down < minSpeedBPS) {
 		return errors.New("invalid speed")
@@ -62,6 +61,21 @@ func (c *ServerConfig) Check() error {
 		return errors.New("invalid max connections per client")
 	}
 	return nil
+}
+
+func (c *ServerConfig) Fill() {
+	if len(c.ALPN) == 0 {
+		c.ALPN = DefaultALPN
+	}
+	if c.ReceiveWindowConn == 0 {
+		c.ReceiveWindowConn = DefaultStreamReceiveWindow
+	}
+	if c.ReceiveWindowClient == 0 {
+		c.ReceiveWindowClient = DefaultConnectionReceiveWindow
+	}
+	if c.MaxConnClient == 0 {
+		c.MaxConnClient = DefaultMaxIncomingStreams
+	}
 }
 
 func (c *ServerConfig) String() string {

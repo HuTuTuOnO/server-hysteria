@@ -12,6 +12,7 @@ import (
 	"github.com/xflash-panda/server-hysteria/internal/pkg/utils"
 	"io"
 	"net"
+	"time"
 )
 
 var defaultIPMasker = &utils.IpMasker{}
@@ -26,6 +27,7 @@ var serverPacketConnFuncFactoryMap = map[string]pktconns.ServerPacketConnFuncFac
 
 func Run(config *ServerConfig, usersService *service.UsersService) {
 	logrus.WithField("config", config.String()).Info("Server configuration loaded")
+	config.Fill()
 
 	if err := usersService.Init(); err != nil {
 		logrus.Fatalf("User service initialization error：%s", err)
@@ -44,14 +46,10 @@ func Run(config *ServerConfig, usersService *service.UsersService) {
 	}
 	tlsConfig = &tls.Config{
 		GetCertificate: kpl.GetCertificateFunc(),
+		NextProtos:     []string{config.ALPN},
 		MinVersion:     tls.VersionTLS13,
 	}
 
-	if config.ALPN != "" {
-		tlsConfig.NextProtos = []string{config.ALPN}
-	} else {
-		tlsConfig.NextProtos = []string{DefaultALPN}
-	}
 	// QUIC config
 	quicConfig := &quic.Config{
 		InitialStreamReceiveWindow:     config.ReceiveWindowConn,
@@ -59,22 +57,12 @@ func Run(config *ServerConfig, usersService *service.UsersService) {
 		InitialConnectionReceiveWindow: config.ReceiveWindowClient,
 		MaxConnectionReceiveWindow:     config.ReceiveWindowClient,
 		MaxIncomingStreams:             int64(config.MaxConnClient),
-		MaxIdleTimeout:                 ServerMaxIdleTimeout,
+		MaxIdleTimeout:                 ServerMaxIdleTimeoutSec * time.Second,
 		KeepAlivePeriod:                0, // Keep alive should solely be client's responsibility
 		DisablePathMTUDiscovery:        config.DisableMTUDiscovery,
 		EnableDatagrams:                true,
 	}
-	if config.ReceiveWindowConn == 0 {
-		quicConfig.InitialStreamReceiveWindow = DefaultStreamReceiveWindow
-		quicConfig.MaxStreamReceiveWindow = DefaultStreamReceiveWindow
-	}
-	if config.ReceiveWindowClient == 0 {
-		quicConfig.InitialConnectionReceiveWindow = DefaultConnectionReceiveWindow
-		quicConfig.MaxConnectionReceiveWindow = DefaultConnectionReceiveWindow
-	}
-	if quicConfig.MaxIncomingStreams == 0 {
-		quicConfig.MaxIncomingStreams = DefaultMaxIncomingStreams
-	}
+
 	if !quicConfig.DisablePathMTUDiscovery && pmtud.DisablePathMTUDiscovery {
 		logrus.Info("Path MTU Discovery is not yet supported on this platform")
 	}
