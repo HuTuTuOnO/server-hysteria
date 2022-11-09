@@ -88,9 +88,11 @@ func (s *UsersService) FetchUsersTask() error {
 	}
 
 	if len(deleted) > 0 {
-		s.userManager.deleteUsers(added)
+		s.userManager.deleteUsers(deleted)
 	}
 	log.Infof("%d user deleted, %d user added", len(deleted), len(added))
+	log.Infof("current users: %d", s.userManager.countUsers())
+	s.userList = newUserList
 	return nil
 }
 
@@ -190,8 +192,18 @@ func (um *UserManager) addUsers(users []api.UserInfo) {
 
 func (um *UserManager) deleteUsers(users []api.UserInfo) {
 	for _, user := range users {
+		log.Infoln("--DELETE", user.UUID)
 		um.store.Delete(user.UUID)
 	}
+}
+
+func (um *UserManager) countUsers() int {
+	length := 0
+	um.store.Range(func(_, _ interface{}) bool {
+		length++
+		return true
+	})
+	return length
 }
 
 func (um *UserManager) auth(uuid string) (int, bool) {
