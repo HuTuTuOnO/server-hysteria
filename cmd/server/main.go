@@ -17,7 +17,7 @@ import (
 
 const (
 	Name          = "hysteria-node"
-	Version       = "0.1.7"
+	Version       = "0.1.8"
 	CopyRight     = "XFLASH-PANDA@2021"
 	LogLevelDebug = "debug"
 	LogLevelError = "error"
@@ -70,6 +70,15 @@ func main() {
 				Required:    true,
 				Destination: &apiConfig.NodeID,
 			},
+			&cli.DurationFlag{
+				Name:        "timeout",
+				Usage:       "API timeout",
+				EnvVars:     []string{"X_PANDA_HYSTERIA_TIMEOUT", "TIMEOUT"},
+				Value:       time.Second * 15,
+				DefaultText: "15 seconds",
+				Required:    false,
+				Destination: &apiConfig.Timeout,
+			},
 			&cli.StringFlag{
 				Name:        "cert_file",
 				Usage:       "Cert file",
@@ -93,7 +102,7 @@ func main() {
 				Usage:       "API request cycle(fetch users), unit: second",
 				EnvVars:     []string{"X_PANDA_HYSTERIA_FETCH_USERS_INTERVAL", "FETCH_USERS_INTERVAL"},
 				Value:       time.Second * 60,
-				DefaultText: "60",
+				DefaultText: "60 seconds",
 				Required:    false,
 				Destination: &serviceConfig.FetchUserInterval,
 			},
@@ -102,7 +111,7 @@ func main() {
 				Usage:       "API request cycle(report traffics), unit: second",
 				EnvVars:     []string{"X_PANDA_HYSTERIA_REPORT_TRAFFIC_INTERVAL", "REPORT_TRAFFICS_INTERVAL"},
 				Value:       time.Second * 90,
-				DefaultText: "60",
+				DefaultText: "60 seconds",
 				Required:    false,
 				Destination: &serviceConfig.ReportTrafficInterval,
 			},

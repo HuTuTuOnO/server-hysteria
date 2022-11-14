@@ -14,7 +14,7 @@ type Config struct {
 	APIHost string
 	NodeID  int
 	Token   string
-	Timeout int
+	Timeout time.Duration
 }
 
 // Client APIClient create a api client to the panel.
@@ -28,7 +28,7 @@ func New(apiConfig *Config) *Client {
 	client := resty.New()
 	client.SetRetryCount(3)
 	if apiConfig.Timeout > 0 {
-		client.SetTimeout(time.Duration(apiConfig.Timeout) * time.Second)
+		client.SetTimeout(apiConfig.Timeout)
 	} else {
 		client.SetTimeout(5 * time.Second)
 	}
