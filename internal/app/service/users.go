@@ -66,10 +66,10 @@ func (s *UsersService) Start() error {
 
 func (s *UsersService) Close() error {
 	if err := s.fuPeriodicTask.Close(); err != nil {
-		log.Warn("fetch task close error: %s", err)
+		log.Warn("fetch task close error: ", err)
 	}
 	if err := s.rtPeriodicTask.Close(); err != nil {
-		log.Warn("report task close error: %s", err)
+		log.Warn("report task close error: ", err)
 	}
 	return nil
 }
@@ -96,23 +96,12 @@ func (s *UsersService) FetchUsersTask() error {
 	return nil
 }
 
-func (s *UsersService) ReportTrafficsTask() error {
-	userTraffics := make([]*api.UserTraffic, 0)
-	s.trafficManager.forRange(func(key, value any) bool {
-		userId := key.(int)
-		trafficItem := value.(*TrafficItem)
-		if trafficItem.Up.Value() > 0 || trafficItem.Down.Value() > 0 || trafficItem.Count.Value() > 0 {
-			userTraffics = append(userTraffics, &api.UserTraffic{
-				UID:      userId,
-				Upload:   trafficItem.Up.Value(),
-				Download: trafficItem.Down.Value(),
-				Count:    trafficItem.Count.Value(),
-			})
-			s.trafficManager.delete(userId)
-		}
-		return true
-	})
+func (s *UsersService) toUserTraffics() []*api.UserTraffic {
+	return s.trafficManager.toUserTraffics()
+}
 
+func (s *UsersService) ReportTrafficsTask() error {
+	userTraffics := s.toUserTraffics()
 	log.Infof("%d user traffic needs to be reported", len(userTraffics))
 	if len(userTraffics) > 0 {
 		err := s.client.ReportUserTraffic(userTraffics)
@@ -216,6 +205,25 @@ func (um *UserManager) auth(uuid string) (int, bool) {
 
 type TrafficManager struct {
 	store sync.Map
+}
+
+func (tm *TrafficManager) toUserTraffics() []*api.UserTraffic {
+	userTraffics := make([]*api.UserTraffic, 0)
+	tm.store.Range(func(key, value any) bool {
+		userId := key.(int)
+		trafficItem := value.(*TrafficItem)
+		if trafficItem.Up.Value() > 0 || trafficItem.Down.Value() > 0 || trafficItem.Count.Value() > 0 {
+			userTraffics = append(userTraffics, &api.UserTraffic{
+				UID:      userId,
+				Upload:   trafficItem.Up.Value(),
+				Download: trafficItem.Down.Value(),
+				Count:    trafficItem.Count.Value(),
+			})
+			tm.store.Delete(userId)
+		}
+		return true
+	})
+	return userTraffics
 }
 
 func (tm *TrafficManager) load(userId int) *TrafficItem {
