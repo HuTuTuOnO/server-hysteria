@@ -18,6 +18,7 @@ func TestTrafficManager_N1(t *testing.T) {
 		t.Error("error")
 	}
 
+	trafficManager.clear()
 	loadTrafficItem := trafficManager.load(1)
 	if loadTrafficItem != nil {
 		t.Error("load error")

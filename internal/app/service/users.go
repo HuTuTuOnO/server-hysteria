@@ -109,6 +109,7 @@ func (s *UsersService) ReportTrafficsTask() error {
 			log.Errorln(err)
 			return nil
 		}
+		s.trafficManager.clear()
 	}
 	return nil
 }
@@ -219,7 +220,6 @@ func (tm *TrafficManager) toUserTraffics() []*api.UserTraffic {
 				Download: trafficItem.Down.Value(),
 				Count:    trafficItem.Count.Value(),
 			})
-			tm.store.Delete(userId)
 		}
 		return true
 	})
@@ -244,6 +244,13 @@ func (tm *TrafficManager) forRange(f func(key, value any) bool) {
 
 func (tm *TrafficManager) delete(userId int) {
 	tm.store.Delete(userId)
+}
+
+func (tm *TrafficManager) clear() {
+	tm.store.Range(func(key interface{}, value interface{}) bool {
+		tm.store.Delete(key)
+		return true
+	})
 }
 
 func newTrafficManager() *TrafficManager {
