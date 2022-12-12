@@ -248,7 +248,7 @@ func (tm *TrafficManager) delete(userId int) {
 
 func (tm *TrafficManager) clear() {
 	tm.store.Range(func(key interface{}, value interface{}) bool {
-		tm.store.Delete(key)
+		value.(*TrafficItem).delete()
 		return true
 	})
 }
@@ -266,7 +266,7 @@ type TrafficItem struct {
 func (t *TrafficItem) delete() {
 	t.Count.Reset()
 	t.Down.Reset()
-	t.Count.Reset()
+	t.Up.Reset()
 }
 
 func newTrafficItem() *TrafficItem {
