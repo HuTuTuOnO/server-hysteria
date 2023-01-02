@@ -58,7 +58,7 @@ func Run(config *ServerConfig, usersService *service.UsersService) {
 		MaxConnectionReceiveWindow:     config.ReceiveWindowClient,
 		MaxIncomingStreams:             int64(config.MaxConnClient),
 		MaxIdleTimeout:                 ServerMaxIdleTimeoutSec * time.Second,
-		KeepAlivePeriod:                0, // Keep alive should solely be client's responsibility
+		KeepAlivePeriod:                10 * time.Second, // Keep alive should solely be client's responsibility
 		DisablePathMTUDiscovery:        config.DisableMTUDiscovery,
 		EnableDatagrams:                true,
 	}
