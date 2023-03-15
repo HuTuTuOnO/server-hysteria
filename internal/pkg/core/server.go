@@ -5,15 +5,13 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"net"
-
-	"github.com/xflash-panda/server-hysteria/internal/pkg/congestion"
-
-	"github.com/lucas-clemente/quic-go"
 	"github.com/lunixbochs/struc"
+	"github.com/quic-go/quic-go"
 	"github.com/xflash-panda/server-hysteria/internal/app/service"
+	"github.com/xflash-panda/server-hysteria/internal/pkg/congestion"
 	"github.com/xflash-panda/server-hysteria/internal/pkg/pmtud"
 	"github.com/xflash-panda/server-hysteria/internal/pkg/transport"
+	"net"
 )
 
 type (

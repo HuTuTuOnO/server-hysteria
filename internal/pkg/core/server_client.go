@@ -3,16 +3,15 @@ package core
 import (
 	"bytes"
 	"context"
+	"github.com/lunixbochs/struc"
+	"github.com/quic-go/quic-go"
 	"github.com/xflash-panda/server-hysteria/internal/app/service"
+	"github.com/xflash-panda/server-hysteria/internal/pkg/transport"
+	"github.com/xflash-panda/server-hysteria/internal/pkg/utils"
 	"math/rand"
 	"net"
 	"strconv"
 	"sync"
-
-	"github.com/lucas-clemente/quic-go"
-	"github.com/lunixbochs/struc"
-	"github.com/xflash-panda/server-hysteria/internal/pkg/transport"
-	"github.com/xflash-panda/server-hysteria/internal/pkg/utils"
 )
 
 const udpBufferSize = 4096
@@ -257,7 +256,7 @@ func (c *serverClient) handleUDP(stream quic.Stream) {
 				_ = struc.Pack(&msgBuf, &msg)
 				sendErr := c.CC.SendMessage(msgBuf.Bytes())
 				if sendErr != nil {
-					if errSize, ok := sendErr.(quic.ErrMessageToLarge); ok {
+					if errSize, ok := sendErr.(quic.ErrMessageTooLarge); ok {
 						// need to frag
 						msg.MsgID = uint16(rand.Intn(0xFFFF)) + 1 // msgID must be > 0 when fragCount > 1
 						fragMessages := fragUDPMessage(msg, int(errSize))

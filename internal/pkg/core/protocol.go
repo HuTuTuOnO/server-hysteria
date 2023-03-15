@@ -1,9 +1,8 @@
 package core
 
 import (
+	"github.com/quic-go/quic-go"
 	"time"
-
-	"github.com/lucas-clemente/quic-go"
 )
 
 const (

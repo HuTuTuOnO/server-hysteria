@@ -2,7 +2,7 @@ package app
 
 import (
 	"crypto/tls"
-	"github.com/lucas-clemente/quic-go"
+	"github.com/quic-go/quic-go"
 	"github.com/sirupsen/logrus"
 	"github.com/xflash-panda/server-hysteria/internal/app/service"
 	"github.com/xflash-panda/server-hysteria/internal/pkg/core"
