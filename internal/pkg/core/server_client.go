@@ -130,7 +130,7 @@ func (c *serverClient) handleMessage(msg []byte) {
 		var err error
 
 		ipAddr, isDomain, err = c.Transport.ResolveIPAddr(dfMsg.Host)
-		if err != nil && !(isDomain && c.Transport.ProxyEnabled()) { // Special case for domain requests + SOCKS5 outbound
+		if err != nil { // Special case for domain requests + SOCKS5 outbound
 			return
 		}
 
@@ -145,7 +145,6 @@ func (c *serverClient) handleMessage(msg []byte) {
 		if c.TrafficItem != nil {
 			c.TrafficItem.Up.Add(int64(len(dfMsg.Data)))
 		}
-
 	}
 
 }
