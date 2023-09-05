@@ -26,7 +26,6 @@ type Client struct {
 // New creat a api instance
 func New(apiConfig *Config) *Client {
 	client := resty.New()
-	client.SetRetryCount(3)
 	if apiConfig.Timeout > 0 {
 		client.SetTimeout(apiConfig.Timeout)
 	} else {
@@ -39,6 +38,7 @@ func New(apiConfig *Config) *Client {
 			log.Errorln(v.Err)
 		}
 	})
+	client.SetRetryCount(0)
 	client.SetBaseURL(apiConfig.APIHost)
 	// Create Key for each requests
 	client.SetQueryParam("key", apiConfig.Token)
