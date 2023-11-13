@@ -17,7 +17,7 @@ import (
 
 const (
 	Name          = "hysteria-node"
-	Version       = "0.1.20"
+	Version       = "0.1.21"
 	CopyRight     = "XFLASH-PANDA@2021"
 	LogLevelDebug = "debug"
 	LogLevelError = "error"
@@ -154,9 +154,10 @@ func main() {
 			if err != nil {
 				log.Fatalf("get node config error:%s", err)
 			}
-			serverConfig.DisableMTUDiscovery = nodeInfo.DisableMTUDiscovery != 0
+			serverConfig.DisableMTUDiscovery = nodeInfo.DisableMTUDiscovery
 			serverConfig.Protocol = nodeInfo.Protocol
 			serverConfig.Obfs = nodeInfo.Obfs
+			serverConfig.DisableUDP = nodeInfo.DisableUdp
 			//与客户端取反
 			serverConfig.UpMbps = nodeInfo.DownMbps
 			serverConfig.DownMbps = nodeInfo.UpMbps

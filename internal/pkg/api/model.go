@@ -27,7 +27,8 @@ type NodeInfo struct {
 	Obfs                string `json:"obfs"`
 	UpMbps              int    `json:"up_mbps"`
 	DownMbps            int    `json:"down_mbps"`
-	DisableMTUDiscovery int    `json:"disable_mtu_discovery"`
+	DisableMTUDiscovery bool   `json:"disable_mtu_discovery"`
+	DisableUdp          bool   `json:"disable_udp"`
 }
 
 type RepNodeInfo struct {
