@@ -17,7 +17,7 @@ import (
 
 const (
 	Name          = "hysteria-node"
-	Version       = "0.1.22"
+	Version       = "0.1.23"
 	CopyRight     = "XFLASH-PANDA@2021"
 	LogLevelDebug = "debug"
 	LogLevelError = "error"
@@ -33,7 +33,7 @@ func init() {
 	cli.ErrWriter = ioutil.Discard
 
 	cli.VersionPrinter = func(c *cli.Context) {
-		fmt.Printf("version=%s xray.version=%s\n", Version)
+		fmt.Printf("version=%s\n", Version)
 	}
 }
 
