@@ -3,11 +3,11 @@ package main
 import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
-	cli "github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v2"
+	api "github.com/xflash-panda/server-client/pkg"
 	"github.com/xflash-panda/server-hysteria/internal/app"
 	"github.com/xflash-panda/server-hysteria/internal/app/service"
-	"github.com/xflash-panda/server-hysteria/internal/pkg/api"
-	"io/ioutil"
+	"io"
 	"os"
 	"os/signal"
 	"runtime"
@@ -17,7 +17,7 @@ import (
 
 const (
 	Name          = "hysteria-node"
-	Version       = "0.1.23"
+	Version       = "0.1.24"
 	CopyRight     = "XFLASH-PANDA@2021"
 	LogLevelDebug = "debug"
 	LogLevelError = "error"
@@ -30,7 +30,7 @@ func init() {
 		Aliases: []string{"V"},
 		Usage:   "print only the version",
 	}
-	cli.ErrWriter = ioutil.Discard
+	cli.ErrWriter = io.Discard
 
 	cli.VersionPrinter = func(c *cli.Context) {
 		fmt.Printf("version=%s\n", Version)
@@ -43,7 +43,7 @@ func main() {
 	var serviceConfig service.Config
 	var logLevel string
 
-	app := &cli.App{
+	application := &cli.App{
 		Name:      Name,
 		Version:   Version,
 		Copyright: CopyRight,
@@ -63,13 +63,7 @@ func main() {
 				Required:    true,
 				Destination: &apiConfig.Token,
 			},
-			&cli.IntFlag{
-				Name:        "node",
-				Usage:       "Node ID",
-				EnvVars:     []string{"X_PANDA_HYSTERIA_NODE", "NODE"},
-				Required:    true,
-				Destination: &apiConfig.NodeID,
-			},
+
 			&cli.DurationFlag{
 				Name:        "timeout",
 				Usage:       "API timeout",
@@ -96,6 +90,13 @@ func main() {
 				Required:    false,
 				DefaultText: "/root/.cert/server.key",
 				Destination: &serverConfig.KeyFile,
+			},
+			&cli.IntFlag{
+				Name:        "node",
+				Usage:       "Node ID",
+				EnvVars:     []string{"X_PANDA_HYSTERIA_NODE", "NODE"},
+				Required:    true,
+				Destination: &serviceConfig.NodeID,
 			},
 			&cli.DurationFlag{
 				Name:        "fetch_users_interval",
@@ -150,17 +151,18 @@ func main() {
 				}()
 			}
 			apiClient := api.New(&apiConfig)
-			nodeInfo, err := apiClient.GetNodeInfo()
+			nodeConf, err := apiClient.Config(api.NodeId(serviceConfig.NodeID), api.Hysteria)
 			if err != nil {
 				log.Fatalf("get node config error:%s", err)
 			}
-			serverConfig.DisableMTUDiscovery = nodeInfo.DisableMTUDiscovery
-			serverConfig.Protocol = nodeInfo.Protocol
-			serverConfig.Obfs = nodeInfo.Obfs
-			serverConfig.DisableUDP = nodeInfo.DisableUdp
-			serverConfig.UpMbps = nodeInfo.UpMbps
-			serverConfig.DownMbps = nodeInfo.DownMbps
-			serverConfig.Listen = fmt.Sprintf(":%d", nodeInfo.ServerPort)
+			hyConig := nodeConf.(*api.HysteriaConfig)
+			serverConfig.DisableMTUDiscovery = hyConig.DisableMTUDiscovery
+			serverConfig.Protocol = hyConig.Protocol
+			serverConfig.Obfs = hyConig.Obfs
+			serverConfig.DisableUDP = hyConig.DisableUdp
+			serverConfig.UpMbps = hyConig.UpMbps
+			serverConfig.DownMbps = hyConig.DownMbps
+			serverConfig.Listen = fmt.Sprintf(":%d", hyConig.ServerPort)
 
 			if err := serverConfig.Check(); err != nil {
 				log.Fatalf("server config error: %s", err)
@@ -180,7 +182,7 @@ func main() {
 		},
 	}
 
-	err := app.Run(os.Args)
+	err := application.Run(os.Args)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -2,15 +2,16 @@ package service
 
 import (
 	"fmt"
-	"github.com/xflash-panda/server-hysteria/internal/pkg/api"
+	log "github.com/sirupsen/logrus"
+	api "github.com/xflash-panda/server-client/pkg"
+	"github.com/xflash-panda/server-hysteria/internal/pkg/counter"
+	"github.com/xflash-panda/server-hysteria/internal/pkg/task"
+	"sync"
+	"time"
 )
-import "github.com/xflash-panda/server-hysteria/internal/pkg/counter"
-import "github.com/xtls/xray-core/common/task"
-import log "github.com/sirupsen/logrus"
-import "sync"
-import "time"
 
 type Config struct {
+	NodeID                int
 	FetchUserInterval     time.Duration
 	ReportTrafficInterval time.Duration
 }
@@ -20,7 +21,7 @@ type UsersService struct {
 	config         *Config
 	userManager    *UserManager
 	trafficManager *TrafficManager
-	userList       *[]api.UserInfo
+	userList       *[]api.User
 	fuPeriodicTask *task.Periodic
 	rtPeriodicTask *task.Periodic
 }
@@ -30,7 +31,7 @@ func NewUsersService(config *Config, client *api.Client) *UsersService {
 }
 
 func (s *UsersService) Init() error {
-	userList, err := s.client.GetUserList()
+	userList, err := s.client.Users(api.NodeId(s.config.NodeID), api.Hysteria)
 	if err != nil {
 		return err
 	}
@@ -76,7 +77,7 @@ func (s *UsersService) Close() error {
 
 func (s *UsersService) FetchUsersTask() error {
 	// Update User
-	newUserList, err := s.client.GetUserList()
+	newUserList, err := s.client.Users(api.NodeId(s.config.NodeID), api.Hysteria)
 	if err != nil {
 		log.Errorln(err)
 		return nil
@@ -104,7 +105,7 @@ func (s *UsersService) ReportTrafficsTask() error {
 	userTraffics := s.toUserTraffics()
 	log.Infof("%d user traffic needs to be reported", len(userTraffics))
 	if len(userTraffics) > 0 {
-		err := s.client.ReportUserTraffic(userTraffics)
+		err := s.client.Submit(api.NodeId(s.config.NodeID), api.Hysteria, userTraffics)
 		if err != nil {
 			log.Errorln(err)
 			return nil
@@ -118,11 +119,11 @@ func (s *UsersService) Auth(uuid string) (int, bool) {
 	return s.userManager.auth(uuid)
 }
 
-func (s *UsersService) compareUserList(newUsers *[]api.UserInfo) (deleted, added []api.UserInfo) {
-	msrc := make(map[api.UserInfo]byte) //按源数组建索引
-	mall := make(map[api.UserInfo]byte) //源+目所有元素建索引
+func (s *UsersService) compareUserList(newUsers *[]api.User) (deleted, added []api.User) {
+	msrc := make(map[api.User]byte) //按源数组建索引
+	mall := make(map[api.User]byte) //源+目所有元素建索引
 
-	var set []api.UserInfo //交集
+	var set []api.User //交集
 
 	//1.源数组建立map
 	for _, v := range *s.userList {
@@ -174,13 +175,13 @@ func newUserManager() *UserManager {
 	return &UserManager{store: sync.Map{}}
 }
 
-func (um *UserManager) addUsers(users []api.UserInfo) {
+func (um *UserManager) addUsers(users []api.User) {
 	for _, user := range users {
 		um.store.Store(user.UUID, user.ID)
 	}
 }
 
-func (um *UserManager) deleteUsers(users []api.UserInfo) {
+func (um *UserManager) deleteUsers(users []api.User) {
 	for _, user := range users {
 		log.Infoln("--DELETE", user.UUID)
 		um.store.Delete(user.UUID)

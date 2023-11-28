@@ -5,21 +5,21 @@ import (
 )
 
 type Counter struct {
-	num int64
+	num uint64
 }
 
 func NewCounter(num uint64) *Counter {
 	return &Counter{0}
 }
 
-func (c *Counter) Add(value int64) {
-	atomic.AddInt64(&c.num, value)
+func (c *Counter) Add(value uint64) {
+	atomic.AddUint64(&c.num, value)
 }
 
 func (c *Counter) Reset() {
-	atomic.StoreInt64(&c.num, 0)
+	atomic.StoreUint64(&c.num, 0)
 }
 
-func (c *Counter) Value() int64 {
-	return atomic.LoadInt64(&c.num)
+func (c *Counter) Value() uint64 {
+	return atomic.LoadUint64(&c.num)
 }

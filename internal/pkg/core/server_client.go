@@ -143,7 +143,7 @@ func (c *serverClient) handleMessage(msg []byte) {
 		}
 		_, _ = conn.WriteTo(dfMsg.Data, addrEx)
 		if c.TrafficItem != nil {
-			c.TrafficItem.Up.Add(int64(len(dfMsg.Data)))
+			c.TrafficItem.Up.Add(uint64(len(dfMsg.Data)))
 		}
 	}
 
@@ -197,9 +197,9 @@ func (c *serverClient) handleTCP(stream quic.Stream, host string, port uint16) {
 	if c.TrafficItem != nil {
 		err = utils.Pipe2Way(stream, conn, func(i int) {
 			if i > 0 {
-				c.TrafficItem.Up.Add(int64(i))
+				c.TrafficItem.Up.Add(uint64(i))
 			} else {
-				c.TrafficItem.Down.Add(int64(-i))
+				c.TrafficItem.Down.Add(uint64(-i))
 			}
 		})
 	} else {
@@ -267,7 +267,7 @@ func (c *serverClient) handleUDP(stream quic.Stream) {
 					}
 				}
 				if c.TrafficItem != nil {
-					c.TrafficItem.Down.Add(int64(n))
+					c.TrafficItem.Down.Add(uint64(n))
 				}
 			}
 			if err != nil {
