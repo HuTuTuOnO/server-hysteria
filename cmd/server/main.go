@@ -155,14 +155,14 @@ func main() {
 			if err != nil {
 				log.Fatalf("get node config error:%s", err)
 			}
-			hyConig := nodeConf.(*api.HysteriaConfig)
-			serverConfig.DisableMTUDiscovery = hyConig.DisableMTUDiscovery
-			serverConfig.Protocol = hyConig.Protocol
-			serverConfig.Obfs = hyConig.Obfs
-			serverConfig.DisableUDP = hyConig.DisableUdp
-			serverConfig.UpMbps = hyConig.UpMbps
-			serverConfig.DownMbps = hyConig.DownMbps
-			serverConfig.Listen = fmt.Sprintf(":%d", hyConig.ServerPort)
+			hyConfig := nodeConf.(*api.HysteriaConfig)
+			serverConfig.DisableMTUDiscovery = hyConfig.DisableMTUDiscovery
+			serverConfig.Protocol = hyConfig.Protocol
+			serverConfig.Obfs = hyConfig.Obfs
+			serverConfig.DisableUDP = hyConfig.DisableUdp
+			serverConfig.UpMbps = hyConfig.UpMbps
+			serverConfig.DownMbps = hyConfig.DownMbps
+			serverConfig.Listen = fmt.Sprintf(":%d", hyConfig.ServerPort)
 
 			if err := serverConfig.Check(); err != nil {
 				log.Fatalf("server config error: %s", err)
